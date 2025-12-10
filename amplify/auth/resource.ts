@@ -1,11 +1,19 @@
 import { defineAuth } from "@aws-amplify/backend";
 
-/**
- * Define and configure your auth resource
- * @see https://docs.amplify.aws/gen2/build-a-backend/auth
- */
 export const auth = defineAuth({
   loginWith: {
     email: true,
+  },
+  multifactorAuthentication: {
+    mode: "OPTIONAL",
+    totp: true,
+  },
+  accountRecovery: "EMAIL_ONLY",
+  passwordPolicy: {
+    minLength: 12,
+    requireNumbers: true,
+    requireLowercase: true,
+    requireUppercase: true,
+    requireSpecialCharacters: true,
   },
 });
