@@ -1,8 +1,6 @@
 {
   "name": "amplify-backend",
   "version": "1.0.0",
-  "description": "Amplify backend",
-  "main": "backend.ts",
   "type": "module",
   "scripts": {
     "build": "tsc"
@@ -10,11 +8,9 @@
   "dependencies": {
     "@aws-amplify/backend": "^1.0.0",
     "@aws-amplify/backend-cli": "^1.0.0",
-    "@aws-sdk/client-secrets-manager": "^3.0.0",
+    "aws-cdk": "^2.0.0",
     "aws-cdk-lib": "^2.0.0",
-    "constructs": "^10.0.0"
-  },
-  "devDependencies": {
+    "constructs": "^10.0.0",
     "typescript": "^5.0.0"
   }
 }
