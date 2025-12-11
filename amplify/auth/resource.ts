@@ -4,7 +4,7 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
   },
-  multifactorAuthentication: {
+  multifactor: {
     mode: "OPTIONAL",
     totp: true,
   },
