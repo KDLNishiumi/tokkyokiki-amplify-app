@@ -9,11 +9,4 @@ export const auth = defineAuth({
     totp: true,
   },
   accountRecovery: "EMAIL_ONLY",
-  passwordPolicy: {
-    minLength: 12,
-    requireNumbers: true,
-    requireLowercase: true,
-    requireUppercase: true,
-    requireSpecialCharacters: true,
-  },
 });
