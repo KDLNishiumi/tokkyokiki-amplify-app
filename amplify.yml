@@ -1,8 +1,4 @@
-version: 1
-applications:
-  - appRoot: .
-    cdk:
-      out: .amplify/artifacts
+version: 0.1
 backend:
   phases:
     build:
