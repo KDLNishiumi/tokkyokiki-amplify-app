@@ -5,6 +5,7 @@
   "dependencies": {
     "@aws-amplify/backend": "^1",
     "@aws-amplify/backend-cli": "^1",
+    "@aws-sdk/client-secrets-manager": "^3",
     "constructs": "^10.0.0",
     "typescript": "^5.0.0"
   }
