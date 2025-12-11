@@ -25,6 +25,3 @@ frontend:
     paths:
       - 'node_modules/**/*'
       - '.next/cache/**/*'
-env:
-  variables:
-    NEXT_PUBLIC_REGION: us-east-1
