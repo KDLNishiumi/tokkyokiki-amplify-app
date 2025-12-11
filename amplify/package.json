@@ -7,8 +7,5 @@
     "@aws-amplify/backend-cli": "^1",
     "constructs": "^10.0.0",
     "typescript": "^5.0.0"
-  },
-  "devDependencies": {
-    "@aws-amplify/cli": "^1"
   }
 }
