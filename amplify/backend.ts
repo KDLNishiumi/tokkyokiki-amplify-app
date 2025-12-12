@@ -3,7 +3,7 @@ import { auth } from './auth/resource.js';
 import { data } from './data/resource.js';
 import { kintoneSync } from './api/resource.js';
 import { storage } from './storage/resource.js';
-import { Stack, CfnOutput } from 'aws-cdk-lib';
+import { Stack } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -29,13 +29,6 @@ const fnUrl = lambdaFn.addFunctionUrl({
     allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
     allowedHeaders: ['*'],
   },
-});
-
-// Function URL を CloudFormation Output として出力
-new CfnOutput(stack, 'KintoneSyncFunctionUrl', {
-  value: fnUrl.url,
-  description: 'Kintone Sync Lambda Function URL',
-  exportName: undefined, // Export を使用しない
 });
 
 // カスタム出力を amplify_outputs.json に追加
