@@ -1,5 +1,19 @@
 import { defineAuth } from "@aws-amplify/backend";
 
+const getCallbackUrls = () => {
+  const urls = ["http://localhost:3000/"];
+  
+  const appId = process.env.AWS_APP_ID;
+  const branch = process.env.AWS_BRANCH || "main";
+  const region = process.env.AWS_REGION || "us-east-1";
+  
+  if (appId) {
+    urls.push(`https://${branch}.${appId}.amplifyapp.com/`);
+  }
+  
+  return urls;
+};
+
 export const auth = defineAuth({
   loginWith: {
     email: {
@@ -7,12 +21,8 @@ export const auth = defineAuth({
       verificationEmailBody: (code: () => string) => `Your verification code is ${code()}`,
     },
     externalProviders: {
-      callbackUrls: [
-        process.env.AMPLIFY_APP_URL || "http://localhost:3000/",
-      ],
-      logoutUrls: [
-        process.env.AMPLIFY_APP_URL || "http://localhost:3000/",
-      ],
+      callbackUrls: getCallbackUrls(),
+      logoutUrls: getCallbackUrls(),
     },
   },
   multifactor: {
