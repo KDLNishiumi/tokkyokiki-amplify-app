@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Amplify } from "aws-amplify";
+import { get } from "aws-amplify/api";
 import outputs from "@/amplify_outputs.json";
 import "@aws-amplify/ui-react/styles.css";
 import "./../app/app.css";
@@ -15,8 +16,9 @@ export default function App() {
   async function callApi() {
     setLoading(true);
     try {
+      // Lambda関数URLを直接呼び出す（デプロイ後にURLを設定）
       const response = await fetch(
-        `${outputs.custom?.API?.endpoint || ""}/sync`,
+        "https://YOUR_LAMBDA_FUNCTION_URL_HERE",
         {
           method: "GET",
         }
