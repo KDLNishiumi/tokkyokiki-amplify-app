@@ -6,6 +6,7 @@ import { storage } from './storage/resource.js';
 import { Stack } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 const backend = defineBackend({
   auth,
@@ -46,6 +47,11 @@ const securityGroup = new ec2.SecurityGroup(stack, 'LambdaSG', {
   vpc,
   allowAllOutbound: true,
 });
+
+// Lambda実行ロールにVPCアクセス権限を追加
+lambdaFn.role?.addManagedPolicy(
+  iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')
+);
 
 // Lambda関数のCfnリソースを取得してVPCに配置
 const cfnFunction = lambdaFn.node.defaultChild as lambda.CfnFunction;
