@@ -1,8 +1,6 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource.js';
-import { data } from './data/resource.js';
 import { kintoneSync } from './api/resource.js';
-import { storage } from './storage/resource.js';
 import { Stack } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -10,20 +8,16 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 const backend = defineBackend({
   auth,
-  data,
   kintoneSync,
-  storage,
 });
 
 const isDevelop = process.env.AWS_BRANCH === 'develop';
 
-// Lambda関数のリソースから Stack を取得
 const lambdaFn = backend.kintoneSync.resources.lambda;
 const stack = Stack.of(lambdaFn);
 
-// Lambda Function URL を追加
 const fnUrl = lambdaFn.addFunctionUrl({
-  authType: lambda.FunctionUrlAuthType.NONE,
+  authType: lambda.FunctionUrlAuthType.AWS_IAM,
   cors: {
     allowedOrigins: ['*'],
     allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
@@ -31,7 +25,14 @@ const fnUrl = lambdaFn.addFunctionUrl({
   },
 });
 
-// カスタム出力を amplify_outputs.json に追加
+const authenticatedRole = backend.auth.resources.authenticatedUserIamRole;
+authenticatedRole.addToPrincipalPolicy(
+  new iam.PolicyStatement({
+    actions: ['lambda:InvokeFunctionUrl'],
+    resources: [lambdaFn.functionArn],
+  })
+);
+
 backend.addOutput({
   custom: {
     kintoneSyncUrl: fnUrl.url,
