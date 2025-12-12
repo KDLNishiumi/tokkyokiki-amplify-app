@@ -1,6 +1,20 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+  // テスト用: GETリクエストでHello Worldを返す
+  if (event.requestContext.http.method === "GET") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "Hello World" }),
+    };
+  }
+
+  // kintone連携用（コメントアウト）
+  /*
   try {
     const body = JSON.parse(event.body || "{}");
     const { appId, records, domain, token } = body;
@@ -32,4 +46,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       body: JSON.stringify({ error: "Sync failed" }),
     };
   }
+  */
+
+  return {
+    statusCode: 405,
+    body: JSON.stringify({ error: "Method not allowed" }),
+  };
 };
