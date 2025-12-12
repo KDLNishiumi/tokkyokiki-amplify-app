@@ -14,7 +14,9 @@ const backend = defineBackend({
   storage,
 });
 
-const stack = Stack.of(backend.kintoneSync);
+// Lambda関数のリソースから Stack を取得
+const lambdaFn = backend.kintoneSync.resources.lambda;
+const stack = Stack.of(lambdaFn);
 
 // VPC作成
 const vpc = new ec2.Vpc(stack, 'KintoneVpc', {
@@ -46,7 +48,6 @@ const securityGroup = new ec2.SecurityGroup(stack, 'LambdaSG', {
 });
 
 // Lambda関数のCfnリソースを取得してVPCに配置
-const lambdaFn = backend.kintoneSync.resources.lambda;
 const cfnFunction = lambdaFn.node.defaultChild as lambda.CfnFunction;
 
 cfnFunction.vpcConfig = {
