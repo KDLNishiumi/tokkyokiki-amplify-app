@@ -2,9 +2,11 @@ import { defineAuth } from "@aws-amplify/backend";
 
 export const auth = defineAuth({
   loginWith: {
-    email: true,
-    oauth: {
-      scopes: ["email", "openid", "profile"],
+    email: {
+      verificationEmailSubject: "Verify your email",
+      verificationEmailBody: (code: () => string) => `Your verification code is ${code()}`,
+    },
+    externalProviders: {
       callbackUrls: [
         process.env.AMPLIFY_APP_URL || "http://localhost:3000/",
       ],
