@@ -38,22 +38,19 @@ export default function App() {
   async function callApi() {
     setLoading(true);
     try {
-      const { Signer } = await import("@aws-amplify/core/internals/utils");
+      const { signRequest } = await import("@aws-amplify/core/internals/aws-client-utils");
       const session = await fetchAuthSession();
       const apiUrl = (outputs as any).custom?.kintoneSyncUrl;
       
-      const signedRequest = await Signer.signRequest(
-        {
-          url: new URL(apiUrl),
-          method: "GET",
-          headers: {},
-        },
-        {
-          credentials: session.credentials!,
-          signingRegion: outputs.auth.aws_region,
-          signingService: "lambda",
-        }
-      );
+      const signedRequest = await signRequest({
+        url: new URL(apiUrl),
+        method: "GET",
+        headers: {},
+      }, {
+        credentials: session.credentials!,
+        signingRegion: outputs.auth.aws_region,
+        signingService: "lambda",
+      });
 
       const response = await fetch(apiUrl, {
         method: "GET",
