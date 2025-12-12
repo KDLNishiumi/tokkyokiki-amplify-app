@@ -35,6 +35,14 @@ const fnUrl = lambdaFn.addFunctionUrl({
 new CfnOutput(stack, 'KintoneSyncFunctionUrl', {
   value: fnUrl.url,
   description: 'Kintone Sync Lambda Function URL',
+  exportName: undefined, // Export を使用しない
+});
+
+// カスタム出力を amplify_outputs.json に追加
+backend.addOutput({
+  custom: {
+    kintoneSyncUrl: fnUrl.url,
+  },
 });
 
 // 本番環境のみVPC設定
@@ -81,10 +89,3 @@ if (isProduction) {
     securityGroupIds: [securityGroup.securityGroupId],
   };
 }
-
-// カスタム出力を amplify_outputs.json に追加
-backend.addOutput({
-  custom: {
-    kintoneSyncUrl: fnUrl.url,
-  },
-});
