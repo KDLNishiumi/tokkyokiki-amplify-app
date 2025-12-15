@@ -5,7 +5,7 @@
   "dependencies": {
     "@aws-amplify/backend": "^1",
     "@aws-amplify/backend-cli": "^1",
-    "aws-cdk-lib": "^2",
+    "aws-cdk-lib": "^2.170.0",
     "constructs": "^10.0.0",
     "typescript": "^5.0.0"
   }
