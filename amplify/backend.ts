@@ -11,7 +11,7 @@ const backend = defineBackend({
   kintoneSync,
 });
 
-const isDevelop = process.env.AWS_BRANCH === 'develop';
+const isProduction = process.env.AWS_BRANCH === 'production';
 
 const lambdaFn = backend.kintoneSync.resources.lambda;
 const stack = Stack.of(lambdaFn);
@@ -39,8 +39,8 @@ backend.addOutput({
   },
 });
 
-// develop環境のみVPC設定
-if (isDevelop) {
+// production環境のみVPC設定
+if (isProduction) {
   // VPC作成
   const vpc = new ec2.Vpc(stack, 'KintoneVpc', {
     maxAzs: 2,
