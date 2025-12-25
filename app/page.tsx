@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Amplify } from "aws-amplify";
-import { signInWithRedirect, signOut, fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
+import { fetchAuthSession, getCurrentUser, signInWithRedirect, signOut } from "aws-amplify/auth";
+import Link from "next/link";
 import outputs from "@/amplify_outputs.json";
 import "./../app/app.css";
 
@@ -41,16 +42,19 @@ export default function App() {
       const { signRequest } = await import("@aws-amplify/core/internals/aws-client-utils");
       const session = await fetchAuthSession();
       const apiUrl = (outputs as any).custom?.kintoneSyncUrl;
-      
-      const signedRequest = await signRequest({
-        url: new URL(apiUrl),
-        method: "GET",
-        headers: {},
-      }, {
-        credentials: session.credentials!,
-        signingRegion: outputs.auth.aws_region,
-        signingService: "lambda",
-      });
+
+      const signedRequest = await signRequest(
+        {
+          url: new URL(apiUrl),
+          method: "GET",
+          headers: {},
+        },
+        {
+          credentials: session.credentials!,
+          signingRegion: outputs.auth.aws_region,
+          signingService: "lambda",
+        }
+      );
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -70,6 +74,9 @@ export default function App() {
       <main>
         <h1>API Test</h1>
         <button onClick={handleSignIn}>Sign In</button>
+        <div style={{ marginTop: "12px" }}>
+          <Link href="/register">新規登録はこちら</Link>
+        </div>
       </main>
     );
   }
