@@ -1,14 +1,18 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource.js';
-import { kintoneSync } from './api/resource.js';
-import { Stack } from 'aws-cdk-lib';
+import { kintoneSync, userSignUp, bulkInvite } from './api/resource.js';
+import { RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 
 const backend = defineBackend({
   auth,
   kintoneSync,
+  userSignUp,
+  bulkInvite,
 });
 
 const isProduction = process.env.AWS_BRANCH === 'production';
@@ -33,11 +37,61 @@ authenticatedRole.addToPrincipalPolicy(
   })
 );
 
+// signup 用 Lambda の設定
+const signUpFn = backend.userSignUp.resources.lambda;
+
+const signUpFnUrl = signUpFn.addFunctionUrl({
+  authType: lambda.FunctionUrlAuthType.NONE,
+  cors: {
+    allowedOrigins: ['*'],
+    // Function URL の CORS では OPTIONS は指定不可
+    allowedMethods: [lambda.HttpMethod.POST],
+    allowedHeaders: ['*'],
+  },
+});
+
+// Lambda が Cognito サインアップ API を呼べるように権限付与
+signUpFn.addToRolePolicy(
+  new iam.PolicyStatement({
+    actions: ['cognito-idp:SignUp'],
+    resources: ['*'],
+  })
+);
+
 backend.addOutput({
   custom: {
     kintoneSyncUrl: fnUrl.url,
+    userSignUpUrl: signUpFnUrl.url,
   },
 });
+
+// bulk invite Lambda 用 IAM 権限
+const bulkInviteFn = backend.bulkInvite.resources.lambda;
+bulkInviteFn.addToRolePolicy(
+  new iam.PolicyStatement({
+    actions: ['cognito-idp:AdminCreateUser', 'cognito-idp:AdminSetUserPassword'],
+    resources: ['*'],
+  })
+);
+bulkInviteFn.addToRolePolicy(
+  new iam.PolicyStatement({
+    actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+    resources: ['*'],
+  })
+);
+// 招待用バケットを作成し、アップロードで Lambda をトリガー
+const inviteBucket = new s3.Bucket(stack, 'InviteBucket', {
+  encryption: s3.BucketEncryption.S3_MANAGED,
+  blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+  removalPolicy: RemovalPolicy.RETAIN,
+});
+inviteBucket.grantRead(bulkInviteFn);
+const bulkInviteFunction = bulkInviteFn as unknown as lambda.Function;
+bulkInviteFunction.addEnvironment('INVITE_BUCKET', inviteBucket.bucketName);
+inviteBucket.addEventNotification(
+  s3.EventType.OBJECT_CREATED,
+  new s3n.LambdaDestination(bulkInviteFn)
+);
 
 // production環境のみVPC設定
 if (isProduction) {

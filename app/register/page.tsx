@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Amplify } from "aws-amplify";
-import { signUp, signIn } from "aws-amplify/auth";
+import { signIn } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
 import outputs from "@/amplify_outputs.json";
 
@@ -30,17 +30,28 @@ export default function RegisterPage() {
     setMessage("");
     setStatus("submitting");
     try {
-      const result = await signUp({
-        username: email,
-        password,
-        options: { userAttributes: { email } },
+      const endpoint = (outputs as any).custom?.userSignUpUrl;
+      if (!endpoint) throw new Error("userSignUpUrl が設定されていません");
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": "dummy-signup-key", // 検証用ダミーキー
+        },
+        body: JSON.stringify({ email, password }),
       });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || "サインアップに失敗しました");
+      }
 
       // 確認コード入力で使うため保存
       sessionStorage.setItem("pendingSignUpEmail", email);
       sessionStorage.setItem("pendingSignUpPassword", password);
 
-      const requiresCode = result.nextStep?.signUpStep === "CONFIRM_SIGN_UP_CODE";
+      const requiresCode = !data.userConfirmed;
       if (requiresCode) {
         setMessage("確認コードをメールに送信しました。次の画面でコードを入力してください。");
       } else {

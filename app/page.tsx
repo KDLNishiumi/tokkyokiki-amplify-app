@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Amplify } from "aws-amplify";
-import { fetchAuthSession, getCurrentUser, signInWithRedirect, signOut } from "aws-amplify/auth";
+import { confirmSignIn, fetchAuthSession, getCurrentUser, signIn, signOut } from "aws-amplify/auth";
 import Link from "next/link";
 import outputs from "@/amplify_outputs.json";
 import "./../app/app.css";
@@ -13,6 +13,12 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [authStep, setAuthStep] = useState<"signIn" | "newPassword">("signIn");
+  const [authStatus, setAuthStatus] = useState<"idle" | "signing-in">("idle");
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
     checkUser();
@@ -27,8 +33,44 @@ export default function App() {
     }
   }
 
-  async function handleSignIn() {
-    await signInWithRedirect();
+  async function handleSignIn(e: FormEvent) {
+    e.preventDefault();
+    if (!email || !password) return;
+    setAuthError("");
+    setAuthStatus("signing-in");
+    try {
+      const res = await signIn({ username: email, password });
+      const step = res.nextStep?.signInStep;
+      if (step === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") {
+        setAuthStep("newPassword");
+        setMessage("初回ログインです。新しいパスワードを設定してください。");
+      } else {
+        await checkUser();
+        setMessage("");
+      }
+    } catch (error: any) {
+      setAuthError(error?.message ?? "サインインに失敗しました");
+    } finally {
+      setAuthStatus("idle");
+    }
+  }
+
+  async function handleConfirmNewPassword(e: FormEvent) {
+    e.preventDefault();
+    if (!newPassword) return;
+    setAuthError("");
+    setAuthStatus("signing-in");
+    try {
+      await confirmSignIn({ challengeResponse: newPassword });
+      setAuthStep("signIn");
+      setNewPassword("");
+      await checkUser();
+      setMessage("");
+    } catch (error: any) {
+      setAuthError(error?.message ?? "新しいパスワードの設定に失敗しました");
+    } finally {
+      setAuthStatus("idle");
+    }
   }
 
   async function handleSignOut() {
@@ -72,8 +114,59 @@ export default function App() {
   if (!user) {
     return (
       <main>
-        <h1>API Test</h1>
-        <button onClick={handleSignIn}>Sign In</button>
+        <h1>サインイン</h1>
+        {authStep === "signIn" && (
+          <form onSubmit={handleSignIn} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 360 }}>
+            <label>
+              <div>Email</div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{ width: "100%" }}
+              />
+            </label>
+            <label>
+              <div>パスワード</div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ width: "100%" }}
+              />
+            </label>
+            <button type="submit" disabled={authStatus === "signing-in"}>
+              {authStatus === "signing-in" ? "サインイン中..." : "サインイン"}
+            </button>
+            {authError && <p style={{ color: "red" }}>{authError}</p>}
+          </form>
+        )}
+
+        {authStep === "newPassword" && (
+          <form onSubmit={handleConfirmNewPassword} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 360 }}>
+            <p style={{ color: "#555" }}>新しいパスワードを入力してください。</p>
+            <label>
+              <div>Email</div>
+              <input type="email" value={email} readOnly style={{ width: "100%", background: "#f4f4f4" }} />
+            </label>
+            <label>
+              <div>新しいパスワード</div>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                style={{ width: "100%" }}
+              />
+            </label>
+            <button type="submit" disabled={authStatus === "signing-in"}>
+              {authStatus === "signing-in" ? "設定中..." : "パスワードを設定してサインイン"}
+            </button>
+            {authError && <p style={{ color: "red" }}>{authError}</p>}
+          </form>
+        )}
         <div style={{ marginTop: "12px" }}>
           <Link href="/register">新規登録はこちら</Link>
         </div>
