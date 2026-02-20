@@ -4,7 +4,34 @@ backend:
     build:
       commands:
         - npm install --cache .npm --prefer-offline --no-audit
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        - echo "AWS_BRANCH=$AWS_BRANCH AWS_APP_ID=$AWS_APP_ID AWS_REGION=$AWS_REGION"
+        - |
+          set -o pipefail
+          if ! npx ampx pipeline-deploy --branch "$AWS_BRANCH" --app-id "$AWS_APP_ID" --debug 2>&1 | tee ampx-pipeline-deploy.log; then
+            echo "pipeline-deploy failed. collecting CloudFormation diagnostics..."
+            STACK_PREFIX="amplify-${AWS_APP_ID}-${AWS_BRANCH}-branch"
+            aws cloudformation list-stacks \
+              --stack-status-filter CREATE_IN_PROGRESS CREATE_FAILED CREATE_COMPLETE UPDATE_IN_PROGRESS UPDATE_COMPLETE UPDATE_FAILED UPDATE_ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_COMPLETE UPDATE_ROLLBACK_FAILED ROLLBACK_IN_PROGRESS ROLLBACK_COMPLETE ROLLBACK_FAILED DELETE_FAILED \
+              --query "reverse(sort_by(StackSummaries[?starts_with(StackName, '${STACK_PREFIX}')], &CreationTime))[0].StackName" \
+              --output text || true
+            LATEST_STACK=$(aws cloudformation list-stacks \
+              --stack-status-filter CREATE_IN_PROGRESS CREATE_FAILED CREATE_COMPLETE UPDATE_IN_PROGRESS UPDATE_COMPLETE UPDATE_FAILED UPDATE_ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_COMPLETE UPDATE_ROLLBACK_FAILED ROLLBACK_IN_PROGRESS ROLLBACK_COMPLETE ROLLBACK_FAILED DELETE_FAILED \
+              --query "reverse(sort_by(StackSummaries[?starts_with(StackName, '${STACK_PREFIX}')], &CreationTime))[0].StackName" \
+              --output text 2>/dev/null || true)
+            if [ -n "$LATEST_STACK" ] && [ "$LATEST_STACK" != "None" ]; then
+              echo "LATEST_STACK=$LATEST_STACK"
+              aws cloudformation describe-stack-events \
+                --stack-name "$LATEST_STACK" \
+                --max-items 30 \
+                --query "StackEvents[].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]" \
+                --output table || true
+            else
+              echo "No stack found with prefix: $STACK_PREFIX"
+            fi
+            echo "Last 200 lines of ampx-pipeline-deploy.log:"
+            tail -n 200 ampx-pipeline-deploy.log || true
+            exit 1
+          fi
 frontend:
   phases:
     build:
