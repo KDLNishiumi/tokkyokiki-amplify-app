@@ -83,7 +83,13 @@ export default function App() {
     try {
       const { signRequest } = await import("@aws-amplify/core/internals/aws-client-utils");
       const session = await fetchAuthSession();
-      const apiUrl = (outputs as any).custom?.kintoneSyncUrl;
+      const apiBaseUrl = (outputs as any).custom?.apiBaseUrl;
+      const apiUrl =
+        (outputs as any).custom?.kintoneSyncUrl ??
+        (apiBaseUrl ? `${apiBaseUrl.replace(/\/$/, "")}/kintone-sync` : undefined);
+      if (!apiUrl) {
+        throw new Error("kintoneSyncUrl が設定されていません");
+      }
 
       const signedRequest = await signRequest(
         {
@@ -94,7 +100,7 @@ export default function App() {
         {
           credentials: session.credentials!,
           signingRegion: outputs.auth.aws_region,
-          signingService: "lambda",
+          signingService: "execute-api",
         }
       );
 

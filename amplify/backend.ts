@@ -3,10 +3,15 @@ import { auth } from './auth/resource.js';
 import { kintoneSync, userSignUp, bulkInvite } from './api/resource.js';
 import { RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as apigwv2i from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as apigwv2a from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import { CdkGraph } from '@aws/pdk/cdk-graph';
+import { CdkGraphDiagramPlugin } from '@aws/pdk/cdk-graph-plugin-diagram';
 
 const backend = defineBackend({
   auth,
@@ -18,36 +23,67 @@ const backend = defineBackend({
 const isProduction = process.env.AWS_BRANCH === 'production';
 
 const lambdaFn = backend.kintoneSync.resources.lambda;
+const signUpFn = backend.userSignUp.resources.lambda;
 const stack = Stack.of(lambdaFn);
 
-const fnUrl = lambdaFn.addFunctionUrl({
-  authType: lambda.FunctionUrlAuthType.AWS_IAM,
-  cors: {
-    allowedOrigins: ['*'],
-    allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
-    allowedHeaders: ['*'],
+const cdkGraphArg = process.argv.find(
+  arg => arg === '--cdk-graph' || arg.startsWith('--cdk-graph=')
+);
+const cdkGraphArgValue =
+  cdkGraphArg && cdkGraphArg.includes('=') ? cdkGraphArg.split('=')[1] : '';
+const isCdkGraphEnabledByArg =
+  cdkGraphArg === '--cdk-graph' ||
+  cdkGraphArgValue === '1' ||
+  cdkGraphArgValue === 'true';
+const isCdkGraphEnabledByEnv =
+  process.env.CDK_GRAPH === '1' || process.env.CDK_GRAPH === 'true';
+const isCdkGraphEnabled = isCdkGraphEnabledByArg || isCdkGraphEnabledByEnv;
+let cdkGraph: CdkGraph | undefined;
+if (isCdkGraphEnabled) {
+  const appRoot = stack.node.root;
+  cdkGraph = new CdkGraph(appRoot as any, {
+    plugins: [new CdkGraphDiagramPlugin()],
+  });
+  process.once('beforeExit', async () => {
+    if (!cdkGraph?.graphContext) {
+      return;
+    }
+    try {
+      await cdkGraph.report();
+    } catch (error) {
+      console.warn('[CdkGraph] report failed:', error);
+    }
+  });
+}
+
+const api = new apigwv2.HttpApi(stack, 'BackendHttpApi', {
+  corsPreflight: {
+    allowOrigins: ['*'],
+    allowMethods: [
+      apigwv2.CorsHttpMethod.GET,
+      apigwv2.CorsHttpMethod.POST,
+      apigwv2.CorsHttpMethod.OPTIONS,
+    ],
+    allowHeaders: ['*'],
   },
 });
 
+const iamAuthorizer = new apigwv2a.HttpIamAuthorizer();
+const kintoneRoutes = api.addRoutes({
+  path: '/kintone-sync',
+  methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+  integration: new apigwv2i.HttpLambdaIntegration('KintoneSyncIntegration', lambdaFn),
+  authorizer: iamAuthorizer,
+});
 const authenticatedRole = backend.auth.resources.authenticatedUserIamRole;
-authenticatedRole.addToPrincipalPolicy(
-  new iam.PolicyStatement({
-    actions: ['lambda:InvokeFunctionUrl'],
-    resources: [lambdaFn.functionArn],
-  })
-);
+for (const route of kintoneRoutes) {
+  route.grantInvoke(authenticatedRole);
+}
 
-// signup 用 Lambda の設定
-const signUpFn = backend.userSignUp.resources.lambda;
-
-const signUpFnUrl = signUpFn.addFunctionUrl({
-  authType: lambda.FunctionUrlAuthType.NONE,
-  cors: {
-    allowedOrigins: ['*'],
-    // Function URL の CORS では OPTIONS は指定不可
-    allowedMethods: [lambda.HttpMethod.POST],
-    allowedHeaders: ['*'],
-  },
+api.addRoutes({
+  path: '/user-signup',
+  methods: [apigwv2.HttpMethod.POST],
+  integration: new apigwv2i.HttpLambdaIntegration('UserSignUpIntegration', signUpFn),
 });
 
 // Lambda が Cognito サインアップ API を呼べるように権限付与
@@ -58,10 +94,14 @@ signUpFn.addToRolePolicy(
   })
 );
 
+const apiBaseUrlRaw = api.url ?? api.apiEndpoint;
+const apiBaseUrl = apiBaseUrlRaw.endsWith('/') ? apiBaseUrlRaw : `${apiBaseUrlRaw}/`;
+
 backend.addOutput({
   custom: {
-    kintoneSyncUrl: fnUrl.url,
-    userSignUpUrl: signUpFnUrl.url,
+    apiBaseUrl,
+    kintoneSyncUrl: `${apiBaseUrl}kintone-sync`,
+    userSignUpUrl: `${apiBaseUrl}user-signup`,
   },
 });
 
@@ -95,10 +135,18 @@ inviteBucket.addEventNotification(
 
 // production環境のみVPC設定
 if (isProduction) {
+  // 固定送信元IP用の Elastic IP
+  const natEip = new ec2.CfnEIP(stack, 'NatGatewayEIP', {
+    domain: 'vpc',
+  });
+
   // VPC作成
   const vpc = new ec2.Vpc(stack, 'KintoneVpc', {
     maxAzs: 2,
     natGateways: 1,
+    natGatewayProvider: ec2.NatProvider.gateway({
+      eipAllocationIds: [natEip.ref],
+    }),
     subnetConfiguration: [
       {
         name: 'Public',
@@ -113,27 +161,25 @@ if (isProduction) {
     ],
   });
 
-  // Elastic IP を NAT Gateway に割り当て
-  const eip = new ec2.CfnEIP(stack, 'NatGatewayEIP', {
-    domain: 'vpc',
-  });
-
   // Security Group作成
   const securityGroup = new ec2.SecurityGroup(stack, 'LambdaSG', {
     vpc,
     allowAllOutbound: true,
   });
 
-  // Lambda実行ロールにVPCアクセス権限を追加
-  lambdaFn.role?.addManagedPolicy(
-    iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')
-  );
-
-  // Lambda関数のCfnリソースを取得してVPCに配置
-  const cfnFunction = lambdaFn.node.defaultChild as lambda.CfnFunction;
-
-  cfnFunction.vpcConfig = {
-    subnetIds: vpc.privateSubnets.map(subnet => subnet.subnetId),
-    securityGroupIds: [securityGroup.securityGroupId],
+  const attachLambdaToVpc = (targetLambda: lambda.IFunction) => {
+    targetLambda.role?.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')
+    );
+    const cfnFunction = targetLambda.node.defaultChild as lambda.CfnFunction;
+    cfnFunction.vpcConfig = {
+      subnetIds: vpc.privateSubnets.map(subnet => subnet.subnetId),
+      securityGroupIds: [securityGroup.securityGroupId],
+    };
   };
+
+  // 本番時はすべての業務 Lambda を VPC 配置
+  attachLambdaToVpc(lambdaFn);
+  attachLambdaToVpc(signUpFn);
+  attachLambdaToVpc(bulkInviteFunction);
 }

@@ -30,8 +30,11 @@ export default function RegisterPage() {
     setMessage("");
     setStatus("submitting");
     try {
-      const endpoint = (outputs as any).custom?.userSignUpUrl;
-      if (!endpoint) throw new Error("userSignUpUrl が設定されていません");
+      const apiBaseUrl = (outputs as any).custom?.apiBaseUrl;
+      const endpoint =
+        (outputs as any).custom?.userSignUpUrl ??
+        (apiBaseUrl ? `${apiBaseUrl.replace(/\/$/, "")}/user-signup` : undefined);
+      if (!endpoint) throw new Error("API エンドポイントが設定されていません");
 
       const res = await fetch(endpoint, {
         method: "POST",

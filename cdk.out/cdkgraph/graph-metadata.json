@@ -1,0 +1,12 @@
+{
+  "version": "0.0.0",
+  "artifacts": {
+    "GRAPH": {
+      "id": "GRAPH",
+      "filepath": "C:\\Users\\nishiumi\\tokkyokiki_amplfy\\tokkyokiki-amplify-app\\cdk.out\\cdkgraph\\graph.json",
+      "description": "Serialized graph",
+      "filename": "graph.json",
+      "source": "CdkGraph"
+    }
+  }
+}
