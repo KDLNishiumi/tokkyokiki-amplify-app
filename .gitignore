@@ -9,12 +9,13 @@ node_modules
 # testing
 /coverage
 
-# next.js
+# framework cache
 /.next/
 /out/
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -33,7 +34,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# vite
+.vite
 
 # amplify
 .amplify

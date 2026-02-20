@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview",
+    "lint": "tsc --noEmit",
     "backend:synth": "tsx scripts/backend-synth.ts"
   },
   "dependencies": {
@@ -16,9 +16,9 @@
     "@aws-sdk/client-sesv2": "^3.962.0",
     "@aws-sdk/util-stream-node": "^3.370.0",
     "aws-amplify": "^6.6.6",
-    "next": "14.2.10",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-router-dom": "^7.13.0"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.19.0",
@@ -27,11 +27,13 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^5.1.4",
     "aws-cdk": "^2.170.0",
     "aws-cdk-lib": "^2.170.0",
     "constructs": "^10.3.0",
     "esbuild": "^0.23.1",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vite": "^7.3.1"
   }
 }

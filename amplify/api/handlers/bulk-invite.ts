@@ -8,7 +8,7 @@ const userPoolId = process.env.USER_POOL_ID!;
 const inviteBucket = process.env.INVITE_BUCKET;
 const fromEmail = process.env.FROM_EMAIL || "";
 const serviceName = process.env.SERVICE_NAME || "ご利用サービス";
-const loginUrl = process.env.LOGIN_URL || "http://localhost:3000/";
+const loginUrl = process.env.LOGIN_URL || "http://localhost:5173/";
 
 const cognito = new CognitoIdentityProviderClient({});
 const s3 = new S3Client({});

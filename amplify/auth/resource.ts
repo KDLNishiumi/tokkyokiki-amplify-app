@@ -1,7 +1,7 @@
 import { defineAuth } from "@aws-amplify/backend";
 
 const getCallbackUrls = () => {
-  const urls = ["http://localhost:3000/"];
+  const urls = ["http://localhost:5173/"];
   
   const appId = process.env.AWS_APP_ID;
   const branch = process.env.AWS_BRANCH || "main";

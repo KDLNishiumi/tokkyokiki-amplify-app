@@ -137,7 +137,7 @@
                           {
                             "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
                           },
-                          "/d2866942007fe6a26ddf59227e26a310ea1a9e8705ba0786cef837ee889e4ef4.json"
+                          "/992bed4410b9dd6e2f8d612bbcff89a366da41e74166c47205d44a912fa33a27.json"
                         ]
                       ]
                     }
@@ -348,7 +348,7 @@
                                   "aws.cognito.signin.user.admin"
                                 ],
                                 "callbackUrLs": [
-                                  "http://localhost:3000/"
+                                  "http://localhost:5173/"
                                 ],
                                 "explicitAuthFlows": [
                                   "ALLOW_CUSTOM_AUTH",
@@ -356,7 +356,7 @@
                                   "ALLOW_REFRESH_TOKEN_AUTH"
                                 ],
                                 "logoutUrLs": [
-                                  "http://localhost:3000/"
+                                  "http://localhost:5173/"
                                 ],
                                 "preventUserExistenceErrors": "ENABLED",
                                 "supportedIdentityProviders": [
@@ -1250,7 +1250,7 @@
               "oauthRedirectSignIn": {
                 "uuid": "amplifynishiumiawsamplifygen2sandbox632d19263foauthRedirectSignIn005AF11C",
                 "attributes": {
-                  "graph:output:value": "http://localhost:3000/"
+                  "graph:output:value": "http://localhost:5173/"
                 },
                 "flags": [
                   "EXTRANEOUS"
@@ -1269,7 +1269,7 @@
               "oauthRedirectSignOut": {
                 "uuid": "amplifynishiumiawsamplifygen2sandbox632d19263foauthRedirectSignOutEFF8F4B2",
                 "attributes": {
-                  "graph:output:value": "http://localhost:3000/"
+                  "graph:output:value": "http://localhost:5173/"
                 },
                 "flags": [
                   "EXTRANEOUS"
@@ -1370,7 +1370,7 @@
                           {
                             "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
                           },
-                          "/b0b980bd488e559bf5c242915834872e7b4136ad8621de6abf61443db76d4807.json"
+                          "/f210bf17b32c9238eb985ae4fc4ea2e3e502a743d5dda087e2d0a241a524b775.json"
                         ]
                       ]
                     }
@@ -2168,7 +2168,7 @@
                               "s3Bucket": {
                                 "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
                               },
-                              "s3Key": "fca6238ede72a48430102955e7ff2c18de59dbb48b4936f45a4dcf4d817904a6.zip"
+                              "s3Key": "ed11c7eec6005cd1a487f4916aee2e5d06572756d76cbe24d226968287018ff5.zip"
                             },
                             "environment": {
                               "variables": {
@@ -2178,7 +2178,7 @@
                                 },
                                 "FROM_EMAIL": "nishiumi@kdl.co.jp",
                                 "SERVICE_NAME": "ご利用サービス",
-                                "LOGIN_URL": "http://localhost:3000/",
+                                "LOGIN_URL": "http://localhost:5173/",
                                 "AMPLIFY_SSM_ENV_CONFIG": "{}"
                               }
                             },

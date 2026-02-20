@@ -346,7 +346,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "fca6238ede72a48430102955e7ff2c18de59dbb48b4936f45a4dcf4d817904a6.zip"
+     "S3Key": "ed11c7eec6005cd1a487f4916aee2e5d06572756d76cbe24d226968287018ff5.zip"
     },
     "Environment": {
      "Variables": {
@@ -356,7 +356,7 @@
       },
       "FROM_EMAIL": "nishiumi@kdl.co.jp",
       "SERVICE_NAME": "ご利用サービス",
-      "LOGIN_URL": "http://localhost:3000/",
+      "LOGIN_URL": "http://localhost:5173/",
       "AMPLIFY_SSM_ENV_CONFIG": "{}"
      }
     },

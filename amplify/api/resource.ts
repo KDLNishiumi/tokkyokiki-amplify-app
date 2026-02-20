@@ -27,7 +27,7 @@ const userPoolId = process.env.AWS_USER_POOL_ID ?? outputs.auth?.user_pool_id ??
 const inviteBucket = process.env.INVITE_BUCKET ?? "";
 const fromEmail = process.env.FROM_EMAIL ?? "nishiumi@kdl.co.jp";
 const serviceName = process.env.SERVICE_NAME ?? "ご利用サービス";
-const loginUrlEnv = process.env.LOGIN_URL ?? "http://localhost:3000/";
+const loginUrlEnv = process.env.LOGIN_URL ?? "http://localhost:5173/";
 
 export const kintoneSync = defineFunction({
   entry: "./handlers/kintone-sync.ts",

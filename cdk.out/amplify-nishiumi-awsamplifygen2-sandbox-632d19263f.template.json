@@ -135,10 +135,10 @@
    "Value": "[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"]"
   },
   "oauthRedirectSignIn": {
-   "Value": "http://localhost:3000/"
+   "Value": "http://localhost:5173/"
   },
   "oauthRedirectSignOut": {
-   "Value": "http://localhost:3000/"
+   "Value": "http://localhost:5173/"
   },
   "oauthResponseType": {
    "Value": "code"
@@ -279,7 +279,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/d2866942007fe6a26ddf59227e26a310ea1a9e8705ba0786cef837ee889e4ef4.json"
+       "/992bed4410b9dd6e2f8d612bbcff89a366da41e74166c47205d44a912fa33a27.json"
       ]
      ]
     }
@@ -316,7 +316,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/b0b980bd488e559bf5c242915834872e7b4136ad8621de6abf61443db76d4807.json"
+       "/f210bf17b32c9238eb985ae4fc4ea2e3e502a743d5dda087e2d0a241a524b775.json"
       ]
      ]
     }
