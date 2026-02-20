@@ -31,7 +31,7 @@ const mergedContext =
 process.env.CDK_CONTEXT_JSON = JSON.stringify(mergedContext);
 
 void (async () => {
-  await import('../amplify/backend.ts');
+  await import('../amplify/backend');
   // Trigger synth in Amplify's default App/Stack factory.
-  process.emit('message', 'amplifySynth');
+  (process as any).emit('message', 'amplifySynth');
 })();
